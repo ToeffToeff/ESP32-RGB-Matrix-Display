@@ -1,6 +1,8 @@
 /*
 Author:	Vitali Gottselig
 https://github.com/
+
+Forked by ToeffToeff
 */
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -99,6 +101,7 @@ public:
 	uint8 G2 = 2;
 	uint8 BL2 = 15;
 	*/
+
 	ESP32RGBmatrixPanel();
 	void drawPixel(int16_t x, int16_t y, uint16_t c);
 	void drawPixel(int16_t x, int16_t y, uint8 r, uint8 g, uint8 b);
@@ -106,10 +109,13 @@ public:
 
 	/* reset all Pixels to black */
 	void black();
-	/*  call every 1-3µs! */
+
+	/*  call every 1-3 us! */
 	void update();
+
 	/*  from 0 = off to 10 = max */
 	void setBrightness(byte brightness);
+
 	/*  returns Color for call Adafruit_GFS methods */
 	static int16_t AdafruitColor(uint8 r, uint8 g, uint8 b);
 
@@ -146,6 +152,5 @@ private:
 	uint8 layer = layerStep - 1;
 	uint8 row = 0;
 	uint8 column = 0;
-	uint8 yS;
 };
 
