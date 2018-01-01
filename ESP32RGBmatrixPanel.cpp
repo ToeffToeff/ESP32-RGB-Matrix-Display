@@ -74,8 +74,6 @@ void ESP32RGBmatrixPanel::drawPixel(int16_t x, int16_t y, uint8 r, uint8 g, uint
 	drawPixel(x, y, AdafruitColor(r, g, b));
 }
 
-
-
 void ESP32RGBmatrixPanel::black()
 {
 	for (int y = 0; y < ROWS; ++y)
