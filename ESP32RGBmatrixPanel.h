@@ -113,7 +113,7 @@ public:
 	/*  call every 1-3 us! */
 	void update();
 
-	/*  from 0 = off to 10 = max */
+	/*  from 0 = off to 15 = max */
 	void setBrightness(byte brightness);
 
 	/*  returns Color for call Adafruit_GFS methods */
@@ -121,12 +121,15 @@ public:
 
 	void drawBitmap(String* bytes);
 
+	int debugVal[10];
+
 private:
 	volatile byte loopNr = 0;
 	volatile byte loopNrOn = 0;
 	void initGPIO();
 	void drawRow();
 	void on();
+	void off();
 	uint8 OE = 23;
 	uint8 CLK = 22;
 	uint8 LAT = 03;

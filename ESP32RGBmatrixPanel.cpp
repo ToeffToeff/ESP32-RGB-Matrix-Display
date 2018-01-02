@@ -10,9 +10,6 @@
 //LAT	CLK|
 //GND	OE |
 
-
-
-
 ESP32RGBmatrixPanel::ESP32RGBmatrixPanel(uint8 oe, uint8 clk, uint8 lat, uint8 r1, uint8 g1, uint8 b1, uint8 r2, uint8 g2, uint8 b2, uint8 a, uint8 b, uint8 c, uint8 d) : Adafruit_GFX(COLUMNS, ROWS)
 {
 	OE = oe;
@@ -32,12 +29,10 @@ ESP32RGBmatrixPanel::ESP32RGBmatrixPanel(uint8 oe, uint8 clk, uint8 lat, uint8 r
 	initGPIO();
 }
 
-
 ESP32RGBmatrixPanel::ESP32RGBmatrixPanel() : Adafruit_GFX(COLUMNS, ROWS)
 {
 	initGPIO();
 }
-
 
 void ESP32RGBmatrixPanel::initGPIO()
 {
@@ -58,11 +53,12 @@ void ESP32RGBmatrixPanel::initGPIO()
 	pinMode(OE, OUTPUT);
 }
 
-
 void ESP32RGBmatrixPanel::drawPixel(int16_t x, int16_t y, uint16_t c)
 {
-	if (x < 0 || x >= COLUMNS) return;
-	if (y < 0 || y >= ROWS) return;
+	if (x < 0 || x >= COLUMNS)
+		return;
+	if (y < 0 || y >= ROWS)
+		return;
 	auto pixel = &pixels[y][x];
 	pixel->r = ((c & rmask)) << 4;
 	pixel->g = ((c & gmask));
@@ -88,22 +84,13 @@ void ESP32RGBmatrixPanel::black()
 	}
 }
 
-#define loops 10
-void ESP32RGBmatrixPanel::update()
-{
-	if (loopNr == 0) drawRow();			//Display OFF-time (25 �s). 
-	if (loopNr == loopNrOn) on();				//Turn Display ON
-	loopNr = loopNr + 1;
-	if (loopNr >= loops)
-	{
-		loopNr = 0;
-	}
-}
-
+#define loops 15
 void ESP32RGBmatrixPanel::setBrightness(byte brightness)
 {
-	if (brightness < 0) brightness = 0;
-	if (brightness >= loops) brightness = loops;
+	if (brightness < 0)
+		brightness = 0;
+	if (brightness >= loops)
+		brightness = loops;
 	if (brightness > 0)
 	{
 		loopNrOn = loops - brightness;
@@ -113,102 +100,117 @@ void ESP32RGBmatrixPanel::setBrightness(byte brightness)
 		//never ON
 		loopNrOn = 255;
 	}
-
 }
 
 int16_t ESP32RGBmatrixPanel::AdafruitColor(uint8 r, uint8 g, uint8 b)
 {
-	int16_t  c = 0;
+	int16_t c = 0;
 	c = r >> 4;
 	c |= (g >> 4) << 4;
 	c |= (b >> 4) << 8;
 	return c;
 }
 
-
-//#define GAMMA_CORRECTION
+	//#define GAMMA_CORRECTION
 
 #ifdef GAMMA_CORRECTION
 const uint8_t PROGMEM gamma8[] = {
-	0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-	0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  1,  1,  1,  1,
-	1,  1,  1,  1,  1,  1,  1,  1,  1,  2,  2,  2,  2,  2,  2,  2,
-	2,  3,  3,  3,  3,  3,  3,  3,  4,  4,  4,  4,  4,  5,  5,  5,
-	5,  6,  6,  6,  6,  7,  7,  7,  7,  8,  8,  8,  9,  9,  9, 10,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1,
+	1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2,
+	2, 3, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 5, 5, 5,
+	5, 6, 6, 6, 6, 7, 7, 7, 7, 8, 8, 8, 9, 9, 9, 10,
 	10, 10, 11, 11, 11, 12, 12, 13, 13, 13, 14, 14, 15, 15, 16, 16,
 	17, 17, 18, 18, 19, 19, 20, 20, 21, 21, 22, 22, 23, 24, 24, 25,
 	25, 26, 27, 27, 28, 29, 29, 30, 31, 32, 32, 33, 34, 35, 35, 36,
 	37, 38, 39, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 50,
 	51, 52, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 66, 67, 68,
 	69, 70, 72, 73, 74, 75, 77, 78, 79, 81, 82, 83, 85, 86, 87, 89,
-	90, 92, 93, 95, 96, 98, 99,101,102,104,105,107,109,110,112,114,
-	115,117,119,120,122,124,126,127,129,131,133,135,137,138,140,142,
-	144,146,148,150,152,154,156,158,160,162,164,167,169,171,173,175,
-	177,180,182,184,186,189,191,193,196,198,200,203,205,208,210,213,
-	215,218,220,223,225,228,231,233,236,239,241,244,247,249,252,255 };
+	90, 92, 93, 95, 96, 98, 99, 101, 102, 104, 105, 107, 109, 110, 112, 114,
+	115, 117, 119, 120, 122, 124, 126, 127, 129, 131, 133, 135, 137, 138, 140, 142,
+	144, 146, 148, 150, 152, 154, 156, 158, 160, 162, 164, 167, 169, 171, 173, 175,
+	177, 180, 182, 184, 186, 189, 191, 193, 196, 198, 200, 203, 205, 208, 210, 213,
+	215, 218, 220, 223, 225, 228, 231, 233, 236, 239, 241, 244, 247, 249, 252, 255};
 
-#define SetColorPin(pin,  state) gamma8[state] > layer ? gpio |= 1 << pin : gpio &= ~(1 << pin);
+#define SetColorPin(pin, state) gamma8[state] > layer ? gpio |= 1 << pin : gpio &= ~(1 << pin);
 #else
-#define SetColorPin(pin,  state) state > layer ? gpio |= 1 << pin : gpio &= ~(1 << pin);
+#define SetColorPin(pin, state) state > layer ? gpio |= 1 << pin : gpio &= ~(1 << pin);
 #endif // GAMMA_CORRECTION
 
-#define SetPinFast(pin,  state) state? gpio |= 1 << pin : gpio &= ~(1 << pin);
+#define SetPinFast(pin, state) state ? gpio |= 1 << pin : gpio &= ~(1 << pin);
 
-
-
-void ESP32RGBmatrixPanel::drawRow()
+void ESP32RGBmatrixPanel::update()
 {
-	gpio = GPIO.out;
-	SetPinFast(OE, HIGH);
-	GPIO.out = gpio;
+	/*if (loo pNr == 0) drawRow();			//Display OFF-time (25 �s). 
+	if (loopNr == loopNrOn) off();				//Turn Display ON
+	loopNr = loopNr + 1;
+	if (loopNr >= loops)
+	{
+		loopNr = 0;
+	} */
+
+	drawRow();
+
+	
+	row++;
+	if (row >= 16)
+		row = 0;
+		
+	off();
 	SetPinFast(CH_A, row & 1 << 0);
 	SetPinFast(CH_B, row & 1 << 1);
 	SetPinFast(CH_C, row & 1 << 2);
 	SetPinFast(CH_D, row & 1 << 3);
 	GPIO.out = gpio;
-
-	for (column = 0; column < COLUMNS; column++)
-	{
-		SetColorPin(R1, pixels[row][column].r);
-		SetColorPin(G1, pixels[row][column].g);
-		SetColorPin(BL1, pixels[row][column].b);
-		SetColorPin(R2, pixels[row + 16][column].r);
-		SetColorPin(G2, pixels[row + 16][column].g);
-		SetColorPin(BL2, pixels[row + 16][column].b);
-
-		//SetPinFast(CLK, 1);
-		GPIO.out = gpio;
-		//SetPinFast(CLK, 0);
-		//GPIO.out = gpio;
-		GPIO.out_w1ts = ((uint32_t)1 << CLK);//SetPinFast is to fast!? wtf!?
-		GPIO.out_w1tc = ((uint32_t)1 << CLK);
-	}
-	SetPinFast(LAT, HIGH);
-	GPIO.out = gpio;
-	SetPinFast(LAT, LOW);
-	GPIO.out = gpio;
-	row++;
-	if (row >= 16)
-	{
-		row = 0;
-		layer += layerStep;
-	}
-	if (layer + 1 >= layers) layer = layerStep - 1;
-
+	on();
 }
 
+void ESP32RGBmatrixPanel::drawRow()
+{
+	gpio = GPIO.out;
+	while (layer + 1 < layers)
+	{
 
+		for (column = 0; column < COLUMNS; column++)
+		{
+			SetColorPin(R1, pixels[row][column].r);
+			SetColorPin(G1, pixels[row][column].g);
+			SetColorPin(BL1, pixels[row][column].b);
+			SetColorPin(R2, pixels[row + 16][column].r);
+			SetColorPin(G2, pixels[row + 16][column].g);
+			SetColorPin(BL2, pixels[row + 16][column].b);
+			GPIO.out = gpio;
 
+			GPIO.out_w1ts = ((uint32_t)1 << CLK);
+			GPIO.out_w1tc = ((uint32_t)1 << CLK);
+		}
+
+		//off();
+
+		GPIO.out_w1ts = ((uint32_t)1 << LAT);
+		GPIO.out_w1tc = ((uint32_t)1 << LAT);
+		gpio = GPIO.out;
+
+		//on();
+
+		layer += layerStep;
+	}
+	layer = layerStep - 1;
+}
 
 void ESP32RGBmatrixPanel::on()
 {
 	GPIO.out_w1tc = ((uint32_t)1 << OE);
+	gpio = GPIO.out;
 }
 
+void ESP32RGBmatrixPanel::off()
+{
+	GPIO.out_w1ts = ((uint32_t)1 << OE);
+	gpio = GPIO.out;
+}
 
-
-
-void ESP32RGBmatrixPanel::drawBitmap(String* bytes)
+void ESP32RGBmatrixPanel::drawBitmap(String *bytes)
 {
 	fillScreen(0);
 	uint8 imgWidth = 0;
