@@ -149,6 +149,7 @@ void ESP32RGBmatrixPanel::update()
 		loopNr = 0;
 	} */
 
+	
 	drawRow();
 	
 	off();
@@ -183,7 +184,7 @@ void ESP32RGBmatrixPanel::drawRow()
 			GPIO.out_w1ts = ((uint32_t)1 << CLK);
 			GPIO.out_w1tc = ((uint32_t)1 << CLK);
 		}
-		
+		off();
 		GPIO.out_w1ts = ((uint32_t)1 << LAT);
 		GPIO.out_w1tc = ((uint32_t)1 << LAT);
 		on();
