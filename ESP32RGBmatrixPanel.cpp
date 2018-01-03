@@ -150,19 +150,19 @@ void ESP32RGBmatrixPanel::update()
 	} */
 
 	drawRow();
-
 	
-	row++;
-	if (row >= 16)
-		row = 0;
-		
 	off();
+
+	row++;
 	SetPinFast(CH_A, row & 1 << 0);
 	SetPinFast(CH_B, row & 1 << 1);
 	SetPinFast(CH_C, row & 1 << 2);
 	SetPinFast(CH_D, row & 1 << 3);
 	GPIO.out = gpio;
-	on();
+
+	if (row >= 16)
+		row = 0;
+
 }
 
 void ESP32RGBmatrixPanel::drawRow()
@@ -170,7 +170,6 @@ void ESP32RGBmatrixPanel::drawRow()
 	gpio = GPIO.out;
 	while (layer + 1 < layers)
 	{
-
 		for (column = 0; column < COLUMNS; column++)
 		{
 			SetColorPin(R1, pixels[row][column].r);
@@ -184,14 +183,11 @@ void ESP32RGBmatrixPanel::drawRow()
 			GPIO.out_w1ts = ((uint32_t)1 << CLK);
 			GPIO.out_w1tc = ((uint32_t)1 << CLK);
 		}
-
-		//off();
-
+		
 		GPIO.out_w1ts = ((uint32_t)1 << LAT);
 		GPIO.out_w1tc = ((uint32_t)1 << LAT);
+		on();
 		gpio = GPIO.out;
-
-		//on();
 
 		layer += layerStep;
 	}
@@ -200,14 +196,18 @@ void ESP32RGBmatrixPanel::drawRow()
 
 void ESP32RGBmatrixPanel::on()
 {
-	GPIO.out_w1tc = ((uint32_t)1 << OE);
-	gpio = GPIO.out;
+	//GPIO.out_w1tc = ((uint32_t)1 << OE);
+	//gpio = GPIO.out;
+	SetPinFast(OE, LOW);
+	GPIO.out = gpio;
 }
 
 void ESP32RGBmatrixPanel::off()
 {
-	GPIO.out_w1ts = ((uint32_t)1 << OE);
-	gpio = GPIO.out;
+	//GPIO.out_w1ts = ((uint32_t)1 << OE);
+	//gpio = GPIO.out;
+	SetPinFast(OE, HIGH);
+	GPIO.out = gpio;
 }
 
 void ESP32RGBmatrixPanel::drawBitmap(String *bytes)
