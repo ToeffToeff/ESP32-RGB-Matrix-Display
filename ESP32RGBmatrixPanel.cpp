@@ -51,6 +51,8 @@ void ESP32RGBmatrixPanel::initGPIO()
 	pinMode(LAT, OUTPUT);
 	pinMode(CLK, OUTPUT);
 	pinMode(OE, OUTPUT);
+
+	Framebuffer framebuffer(10, COLUMNS, ROWS);
 }
 
 void ESP32RGBmatrixPanel::drawPixel(int16_t x, int16_t y, uint16_t c)
@@ -59,10 +61,15 @@ void ESP32RGBmatrixPanel::drawPixel(int16_t x, int16_t y, uint16_t c)
 		return;
 	if (y < 0 || y >= ROWS)
 		return;
+
+#ifndef FramebufferActive
 	auto pixel = &pixels[y][x];
 	pixel->r = ((c & rmask)) << 4;
 	pixel->g = ((c & gmask));
 	pixel->b = ((c & bmask) >> 4);
+#else
+	framebuffer.setPixel(x, y, c);
+#endif
 }
 
 void ESP32RGBmatrixPanel::drawPixel(int16_t x, int16_t y, uint8 r, uint8 g, uint8 b)
@@ -76,10 +83,14 @@ void ESP32RGBmatrixPanel::black()
 	{
 		for (int x = 0; x < COLUMNS; x++)
 		{
+#ifndef FramebufferActive
 			auto pixel = &pixels[y][x];
 			pixel->r = 0;
 			pixel->g = 0;
 			pixel->b = 0;
+#else
+			framebuffer.setPixel(x, y, 0x0000);
+#endif
 		}
 	}
 }
@@ -149,9 +160,8 @@ void ESP32RGBmatrixPanel::update()
 		loopNr = 0;
 	} */
 
-	
 	drawRow();
-	
+
 	off();
 
 	row++;
@@ -162,8 +172,10 @@ void ESP32RGBmatrixPanel::update()
 	GPIO.out = gpio;
 
 	if (row >= 16)
+	{
 		row = 0;
-
+		framebuffer.frameReadComplete();
+	}
 }
 
 void ESP32RGBmatrixPanel::drawRow()
@@ -173,12 +185,21 @@ void ESP32RGBmatrixPanel::drawRow()
 	{
 		for (column = 0; column < COLUMNS; column++)
 		{
+#ifndef FramebufferActive
 			SetColorPin(R1, pixels[row][column].r);
 			SetColorPin(G1, pixels[row][column].g);
 			SetColorPin(BL1, pixels[row][column].b);
 			SetColorPin(R2, pixels[row + 16][column].r);
 			SetColorPin(G2, pixels[row + 16][column].g);
 			SetColorPin(BL2, pixels[row + 16][column].b);
+#else
+			SetColorPin(R1, framebuffer.getPixel(row, column)->r);
+			SetColorPin(G1, framebuffer.getPixel(row, column)->g);
+			SetColorPin(BL1, framebuffer.getPixel(row, column)->b);
+			SetColorPin(R2, framebuffer.getPixel(row + 16, column)->r);
+			SetColorPin(G2, framebuffer.getPixel(row + 16, column)->g);
+			SetColorPin(BL2, framebuffer.getPixel(row + 16, column)->b);
+#endif
 			GPIO.out = gpio;
 
 			GPIO.out_w1ts = ((uint32_t)1 << CLK);
@@ -195,18 +216,19 @@ void ESP32RGBmatrixPanel::drawRow()
 	layer = layerStep - 1;
 }
 
+void ESP32RGBmatrixPanel::frameComplete()
+{
+	framebuffer.frameWriteComplete();
+}
+
 void ESP32RGBmatrixPanel::on()
 {
-	//GPIO.out_w1tc = ((uint32_t)1 << OE);
-	//gpio = GPIO.out;
 	SetPinFast(OE, LOW);
 	GPIO.out = gpio;
 }
 
 void ESP32RGBmatrixPanel::off()
 {
-	//GPIO.out_w1ts = ((uint32_t)1 << OE);
-	//gpio = GPIO.out;
 	SetPinFast(OE, HIGH);
 	GPIO.out = gpio;
 }
