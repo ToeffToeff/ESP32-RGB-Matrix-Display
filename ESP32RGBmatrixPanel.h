@@ -7,7 +7,6 @@ Forked by ToeffToeff
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "Adafruit_GFX.h"
-#include "Framebuffer.h"
 typedef unsigned char uint8;
 typedef unsigned short uint16;
 typedef short	int16_t;
@@ -48,11 +47,18 @@ typedef unsigned short uint16_t;
 //int tespin3 = 25; OK
 #pragma endregion
 
+struct color
+{
+public:
+	uint8 r;
+	uint8 g;
+	uint8 b;
+};
+
 #define COLUMNS 64
 #define ROWS 32
 #define layers 256
 #define colorDepthPerChannel 4  //(2^colorDepthPerChannel)^3  Colors. 4096@4 bit.  262144 @ 6 bit. 
-//#define FramebufferActive
 
 //0b0000RRRRGGGGBBBB
 #define rmask 0b0000000000001111
@@ -115,7 +121,7 @@ public:
 
 	void drawBitmap(String* bytes);
 
-	void frameComplete();
+	int debugVal[10];
 
 private:
 	volatile byte loopNr = 0;
@@ -142,7 +148,6 @@ private:
 	uint8 BL2 = 15;
 
 	color pixels[ROWS][COLUMNS];
-	Framebuffer framebuffer;
 
 	uint32_t gpio;
 
