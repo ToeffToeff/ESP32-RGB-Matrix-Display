@@ -23,28 +23,32 @@ typedef unsigned short uint16_t;
 //OE connected with LAT
 
 #pragma region Pintests
-//int tespin1 = 23; OK
-//int tespin2 = 22; OK
-//int tespin3 = 01; nicht!!!! on (TX0)
+//int tespin1 = 00; OK
+//int tespin3 = 01; NOT OK!!!! on (TX0)
+//int tespin2 = 02; OK
 //int tespin1 = 03; OK (RX0)
+//int tespin3 = 04; OK
+//int tespin3 = 05; OK
+//int tespin3 = 6; ???
+//int tespin3 = 7; freeze
+//int tespin2 = 8; freeze
+//int tespin1 = 12; OK	(JTAG Pin on ESP23 WROVER Kit) 
+//int tespin1 = 13; OK	(JTAG Pin on ESP23 WROVER Kit)
+//int tespin2 = 14; OK	(JTAG Pin on ESP23 WROVER Kit)
+//int tespin3 = 15; OK	(JTAG Pin on ESP23 WROVER Kit)
+//int tespin3 = 16; OK	(not OK on ESP32 WROVER Kit) 
+//int tespin3 = 17; OK	(not OK on ESP32 WROVER Kit)  
+//int tespin3 = 18; OK
 //int tespin2 = 21; OK
 //int tespin3 = 19; OK
-//int tespin3 = 18; OK
-//int tespin3 = 5; OK
-//int tespin3 = 17; OK
-//int tespin3 = 16; OK
-//int tespin3 = 4; OK
-//int tespin1 = 0; OK
-//int tespin2 = 2; OK
-//int tespin3 = 15; OK
-//int tespin2 = 8; freeze
-//int tespin3 = 7; freeze
-//int tespin3 = 6; ???
-//int tespin1 = 12; OK
-//int tespin2 = 14; OK
-//int tespin3 = 27; OK
-//int tespin2 = 26; OK
+//int tespin2 = 22; OK
+//int tespin1 = 23; OK
 //int tespin3 = 25; OK
+//int tespin2 = 26; OK
+//int tespin3 = 27; OK
+//int tespin3 = 32; not OK on ESP32 WROVER Kit (unknown on standard ESP32)
+//int tespin3 = 32; not OK on ESP32 WROVER Kit (unknown on standard ESP32)
+
 #pragma endregion
 
 struct color
@@ -59,6 +63,7 @@ public:
 #define ROWS 32
 #define layers 256
 #define colorDepthPerChannel 4  //(2^colorDepthPerChannel)^3  Colors. 4096@4 bit.  262144 @ 6 bit. 
+#define frameBufferEnabled
 
 //0b0000RRRRGGGGBBBB
 #define rmask 0b0000000000001111
@@ -121,7 +126,9 @@ public:
 
 	void drawBitmap(String* bytes);
 
-	int debugVal[10];
+	void frameComplete();
+
+	uint8_t debugVal[10];
 
 private:
 	volatile byte loopNr = 0;
@@ -130,6 +137,9 @@ private:
 	void drawRow();
 	void on();
 	void off();
+	void swapWriteFrames();
+	void swapReadFrames();
+	bool readyToSwapFrames = false;
 	uint8 OE = 23;
 	uint8 CLK = 22;
 	uint8 LAT = 03;
@@ -147,7 +157,12 @@ private:
 	uint8 G2 = 2;
 	uint8 BL2 = 15;
 
-	color pixels[ROWS][COLUMNS];
+	struct color pixels1[ROWS][COLUMNS];
+	struct color pixels2[ROWS][COLUMNS];
+	struct color pixels3[ROWS][COLUMNS];
+	struct color (*writeFrame)[ROWS][COLUMNS] = &pixels1;
+	struct color (*readFrame)[ROWS][COLUMNS] = &pixels2;
+	struct color (*bufferFrame)[ROWS][COLUMNS] = &pixels3;
 
 	uint32_t gpio;
 

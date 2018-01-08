@@ -59,10 +59,9 @@ void ESP32RGBmatrixPanel::drawPixel(int16_t x, int16_t y, uint16_t c)
 		return;
 	if (y < 0 || y >= ROWS)
 		return;
-	auto pixel = &pixels[y][x];
-	pixel->r = ((c & rmask)) << 4;
-	pixel->g = ((c & gmask));
-	pixel->b = ((c & bmask) >> 4);
+	(*writeFrame)[y][x].r = ((c & rmask)) << 4;
+	(*writeFrame)[y][x].g = ((c & gmask));
+	(*writeFrame)[y][x].b = ((c & bmask) >> 4);
 }
 
 void ESP32RGBmatrixPanel::drawPixel(int16_t x, int16_t y, uint8 r, uint8 g, uint8 b)
@@ -72,16 +71,7 @@ void ESP32RGBmatrixPanel::drawPixel(int16_t x, int16_t y, uint8 r, uint8 g, uint
 
 void ESP32RGBmatrixPanel::black()
 {
-	for (int y = 0; y < ROWS; ++y)
-	{
-		for (int x = 0; x < COLUMNS; x++)
-		{
-			auto pixel = &pixels[y][x];
-			pixel->r = 0;
-			pixel->g = 0;
-			pixel->b = 0;
-		}
-	}
+	memset(writeFrame, 0, 3*ROWS*COLUMNS);
 }
 
 #define loops 15
@@ -100,15 +90,6 @@ void ESP32RGBmatrixPanel::setBrightness(byte brightness)
 		//never ON
 		loopNrOn = 255;
 	}
-}
-
-int16_t ESP32RGBmatrixPanel::AdafruitColor(uint8 r, uint8 g, uint8 b)
-{
-	int16_t c = 0;
-	c = r >> 4;
-	c |= (g >> 4) << 4;
-	c |= (b >> 4) << 8;
-	return c;
 }
 
 	//#define GAMMA_CORRECTION
@@ -148,10 +129,13 @@ void ESP32RGBmatrixPanel::update()
 	{
 		loopNr = 0;
 	} */
+	if ((readyToSwapFrames) && (row == 0))
+	{
+		swapReadFrames();
+	}
 
-	
 	drawRow();
-	
+
 	off();
 
 	row++;
@@ -164,6 +148,11 @@ void ESP32RGBmatrixPanel::update()
 	if (row >= 16)
 		row = 0;
 
+	// if (row >= 16)
+	// 	row = 0;
+
+	// debugVal[0] = (*readFrame)[2][2].r;
+	// debugVal[1] = (*readFrame)[2][2].g;
 }
 
 void ESP32RGBmatrixPanel::drawRow()
@@ -173,12 +162,12 @@ void ESP32RGBmatrixPanel::drawRow()
 	{
 		for (column = 0; column < COLUMNS; column++)
 		{
-			SetColorPin(R1, pixels[row][column].r);
-			SetColorPin(G1, pixels[row][column].g);
-			SetColorPin(BL1, pixels[row][column].b);
-			SetColorPin(R2, pixels[row + 16][column].r);
-			SetColorPin(G2, pixels[row + 16][column].g);
-			SetColorPin(BL2, pixels[row + 16][column].b);
+			SetColorPin(R1, (*readFrame)[row][column].r);
+			SetColorPin(G1, (*readFrame)[row][column].g);
+			SetColorPin(BL1, (*readFrame)[row][column].b);
+			SetColorPin(R2, (*readFrame)[row + 16][column].r);
+			SetColorPin(G2, (*readFrame)[row + 16][column].g);
+			SetColorPin(BL2, (*readFrame)[row + 16][column].b);
 			GPIO.out = gpio;
 
 			GPIO.out_w1ts = ((uint32_t)1 << CLK);
@@ -195,6 +184,29 @@ void ESP32RGBmatrixPanel::drawRow()
 	layer = layerStep - 1;
 }
 
+void ESP32RGBmatrixPanel::frameComplete()
+{
+	readyToSwapFrames = false;
+	swapWriteFrames();
+	readyToSwapFrames = true;
+}
+
+void ESP32RGBmatrixPanel::swapWriteFrames()
+{
+	struct color(*temp)[ROWS][COLUMNS] = bufferFrame;
+	bufferFrame = writeFrame;
+	writeFrame = temp;
+	readyToSwapFrames = false;
+}
+
+void ESP32RGBmatrixPanel::swapReadFrames()
+{
+	struct color(*temp)[ROWS][COLUMNS] = bufferFrame;
+	bufferFrame = readFrame;
+	readFrame = temp;
+	readyToSwapFrames = false;
+}
+
 void ESP32RGBmatrixPanel::on()
 {
 	//GPIO.out_w1tc = ((uint32_t)1 << OE);
@@ -209,6 +221,15 @@ void ESP32RGBmatrixPanel::off()
 	//gpio = GPIO.out;
 	SetPinFast(OE, HIGH);
 	GPIO.out = gpio;
+}
+
+int16_t ESP32RGBmatrixPanel::AdafruitColor(uint8 r, uint8 g, uint8 b)
+{
+	int16_t c = 0;
+	c = r >> 4;
+	c |= (g >> 4) << 4;
+	c |= (b >> 4) << 8;
+	return c;
 }
 
 void ESP32RGBmatrixPanel::drawBitmap(String *bytes)
